@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+    crypto:
+        image: makino03/neo-polling-crypto:latest
+        volumes:
+            - ./:/crypto
+            - ./data/app/registry:/usr/local/cargo/registry/
+            - ../:/target
+        command: "sh /crypto/build.sh"

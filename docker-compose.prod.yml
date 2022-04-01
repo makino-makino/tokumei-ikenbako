@@ -1,0 +1,7 @@
+services:
+    app:
+        command: sh -c 'yarn install && yarn run build'
+
+    proxy:
+        volumes:
+            - "./app:/var/www/app:ro"

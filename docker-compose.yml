@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+    api:
+        build: ./api
+        ports:
+            - "5000:5000"
+        volumes:
+            - "./api:/api"
+            - "./crypto/signer:/crypto/signer"
+            # - "./api/data/api.log:/var/log/api.log"
+        command: python3 api.py &>&1
+        env_file:
+            - ./.env
+
+    app:
+        build: ./app
+        working_dir: /app
+        volumes:
+            - "./app/:/app/"
+            - "./crypto/sender/pkg:/app/public/static"
+            - "./crypto/sender/pkg:/crypto/sender/pkg"
+
+        command: sh -c 'yarn install && yarn serve'
+
+    proxy:
+        build:
+            context: .
+            dockerfile: ./proxy/Dockerfile
+            args:
+                - INCUBATOR_PASS=${INCUBATOR_PASS}
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - "./proxy/${SERV_ENV:-dev}.conf:/root/default.conf.template"
+            - "./data/certbot/conf:/etc/letsencrypt"
+            - "./data/certbot/www:/var/www/certbot"
+        links:
+            - app
+            - api
+        env_file:
+            - ./.env
+        command: sh -c "envsubst '$$DEPLOY_HOST' < /root/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+
+    certbot:
+        image: certbot/certbot
+        profiles:
+            # Default to ignore this service on `up`.
+            # You can renew certificate with: `docker-compose up certbot`
+            - cert
+        volumes:
+            - ./data/certbot/conf:/etc/letsencrypt
+            - ./data/certbot/www:/var/www/certbot
+        command: renew

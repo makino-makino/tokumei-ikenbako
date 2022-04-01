@@ -1,0 +1,14 @@
+.DS_Store
+**/target
+data
+
+__pycache__
+.env
+
+data.db
+*.pyc
+**/node_modules
+**/*.key
+
+# Downloaded by integrated test
+keys.json
